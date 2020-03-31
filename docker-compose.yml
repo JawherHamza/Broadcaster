@@ -6,3 +6,7 @@ services:
     build: .
     ports:
       - "9008:9008"
+    volumes:
+      - ./:/node-app
+    depends_on:
+      - redis-server
