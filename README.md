@@ -25,5 +25,6 @@ host botv = http://botv.io:9008
     curl --location --request POST '/broadcastfb/records/:appId'
     --data-raw '{
     "text": "test from broadcast service",
-    "tag": "CONFIRMED_EVENT_UPDATE"
+    "tag": "CONFIRMED_EVENT_UPDATE",
+    "pageId" : "pageId"
     }'
