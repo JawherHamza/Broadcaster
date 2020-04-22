@@ -10,12 +10,45 @@ module.exports = (() => {
     const broadcastKey = "broadcast";
 
     function addBroadcastRecord(data, cb) {
-        const serilized_data = JSON.stringify(data);
-        client.hset(broadcastKey + ":" + data.appId, data.userId, serilized_data, cb);
+        getFacebookBroadcastRecord(data, (err , record)=>{
+            const {appId , category , userId, callbackUrl, middlewareId} = data
+            if(err) console.log(err)
+            console.log(record , "record")
+            if(record){
+                let categories =  record.categories ?record.categories : [];
+                if(categories.length){
+                    let categoryFound = categories.find(el=> el === category);
+                    console.log(categoryFound , "categoryFound1")
+                    if(!categoryFound){
+                        categories.push(category)
+                    }
+                }else{
+                    categories.push(category)
+                }
+                const serilized_data = JSON.stringify({appId , categories , userId, callbackUrl, middlewareId});
+                client.hset(broadcastKey + ":" + appId, userId, serilized_data, cb);
+            }else{
+                const serilized_data = JSON.stringify({appId , categories : [category] , userId, callbackUrl, middlewareId});
+                client.hset(broadcastKey + ":" + appId, userId, serilized_data, cb);
+            }
+        })
     }
 
     function removeBroadcastRecord(data, cb) {
-        client.hdel(broadcastKey + ":" + data.appId, data.userId, cb);
+        const {appId , userId , category} = data
+        if(category){
+            getFacebookBroadcastRecord({appId , userId , category}, (err , record)=>{
+                if(err) console.log(err)
+                if(record){
+                    let categories = record.categories.filter(el=> el !== category)
+                    const serilized_data = JSON.stringify({...record , categories});
+                    client.hset(broadcastKey + ":" + appId, userId, serilized_data, cb);
+                }
+            })
+        }else{
+            client.hdel(broadcastKey + ":" + data.appId, data.userId, cb);
+        }
+        
     }
 
     function getFacebookBroadcastRecords(appId, cb) {
