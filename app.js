@@ -4,6 +4,7 @@ const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const dbServices = require("./db/redis");
 const middlewareServices = require("./apis/middleware");
+const {extractPageId} = require('./utils');
 const app = express();
 const server = require("http").Server(app);
 const port = 9008;
@@ -25,31 +26,60 @@ app.use(bodyParser.json());
 //SEND TO ALL
 app.post("/broadcastfb/records/:appId", (req, res) => {
     // allows the broadcasting of messages to facebook users
-    const { delay = 150, text, attachements, tag } = req.body;
-    dbServices.getFacebookBroadcastRecords(req.params.appId, (err, sessions) => {
-        sessions.forEach((record, i) => {
-            console.log(record);
-            record.callbackUrl = url
-                .format({
-                    protocol: req.protocol,
-                    host: req.get("host"),
-                })
-                .includes("9008")
-                ? record.callbackUrl.replace("http://middleware", "https://botv.io/api/middleware")
-                : record.callbackUrl.replace("http://middleware", "https://demo.botv.io/api/middleware");
-
-            setTimeout(() => {
-                middlewareServices.call(
-                    Object.assign(record, {
-                        response: text,
-                        attachements: attachements,
-                        tag: tag || "CONFIRMED_EVENT_UPDATE",
+    const { delay = 150, text, attachements, tag , pageId } = req.body;
+    if(!pageId){
+        dbServices.getFacebookBroadcastRecords(req.params.appId, (err, sessions) => {
+            sessions.forEach((record, i) => {
+                console.log(record);
+                record.callbackUrl = url
+                    .format({
+                        protocol: req.protocol,
+                        host: req.get("host"),
                     })
-                );
-            }, i * delay);
+                    .includes("9008")
+                    ? record.callbackUrl.replace("http://middleware", "https://botv.io/api/middleware")
+                    : record.callbackUrl.replace("http://middleware", "https://demo.botv.io/api/middleware");
+    
+                setTimeout(() => {
+                    middlewareServices.call(
+                        Object.assign(record, {
+                            response: text,
+                            attachements: attachements,
+                            tag: tag || "CONFIRMED_EVENT_UPDATE",
+                        })
+                    );
+                }, i * delay);
+            });
+            res.end();
         });
-        res.end();
-    });
+    }else{
+        dbServices.getFacebookBroadcastRecords(req.params.appId, (err, sessions) => {
+            let filtredSessions = sessions.filter(el=> extractPageId(el.callbackUrl) === String(pageId) )
+            filtredSessions.forEach((record, i) => {
+                        console.log(record);
+                        record.callbackUrl = url
+                            .format({
+                                protocol: req.protocol,
+                                host: req.get("host"),
+                            })
+                            .includes("9008")
+                            ? record.callbackUrl.replace("http://middleware", "https://botv.io/api/middleware")
+                            : record.callbackUrl.replace("http://middleware", "https://demo.botv.io/api/middleware");
+            
+                        setTimeout(() => {
+                            middlewareServices.call(
+                                Object.assign(record, {
+                                    response: text,
+                                    attachements: attachements,
+                                    tag: tag || "CONFIRMED_EVENT_UPDATE",
+                                })
+                            );
+                        }, i * delay);
+                    });
+                    res.end();
+                });
+    }
+   
 });
 
 //Get user
