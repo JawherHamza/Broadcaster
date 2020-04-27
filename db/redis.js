@@ -68,7 +68,7 @@ module.exports = (() => {
     function getFacebookBroadcastRecord(data, cb) {
         client.hget(broadcastKey + ":" + data.appId, data.userId, (err, result) => {
             if (err) cb(err);
-            if (!result) return cb(null, []);
+            if (!result) return cb(null, null);
             cb(null, JSON.parse(result));
         });
     }

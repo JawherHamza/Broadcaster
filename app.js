@@ -70,9 +70,9 @@ app.get("/broadcastfb/:appId/:userId", (req, res) => {
             return res.status(500).json({ entities: { success: "FALSE" } });
         }
         if (handout){
-            res.status(200).json({ entities: { success: "TRUE", user: true } });
+            res.status(200).json({ entities: { success: "TRUE", user: handout , found :true } });
         }else{
-            res.status(200).json({ entities: { success: "TRUE", user: false } });
+            res.status(200).json({ entities: { success: "TRUE", user: handout , found : false } });
         }
         
     });
