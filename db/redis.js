@@ -19,16 +19,19 @@ module.exports = (() => {
                 if(categories.length){
                     let categoryFound = categories.find(el=> el === category);
                     console.log(categoryFound , "categoryFound1")
-                    if(!categoryFound){
+                    if(!categoryFound && category){
                         categories.push(category)
                     }
                 }else{
-                    categories.push(category)
+                    if(category){
+                        categories.push(category)
+                    }
+                    
                 }
                 const serilized_data = JSON.stringify({appId , categories , userId, callbackUrl, middlewareId});
                 client.hset(broadcastKey + ":" + appId, userId, serilized_data, cb);
             }else{
-                const serilized_data = JSON.stringify({appId , categories : [category] , userId, callbackUrl, middlewareId});
+                const serilized_data = JSON.stringify({appId , categories : category?[category]:[] , userId, callbackUrl, middlewareId});
                 client.hset(broadcastKey + ":" + appId, userId, serilized_data, cb);
             }
         })

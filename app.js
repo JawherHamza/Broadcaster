@@ -27,16 +27,17 @@ app.use(bodyParser.json());
 app.post("/broadcastfb/records/:appId", (req, res) => {
     // allows the broadcasting of messages to facebook users
     const { delay = 150, text, attachements, tag , pageId , category } = req.body;
- 
+    console.log(pageId , category)
         dbServices.getFacebookBroadcastRecords(req.params.appId, (err, sessions) => {
             if(pageId){
                 sessions = sessions.filter(el=> extractPageId(el.callbackUrl) === String(pageId) )
             }
+            console.log("sessions after pageId ***********************************" , sessions)
             if(category){
                 sessions = filterByCategory(sessions , category)
             }
+            console.log("sessions after category***************************************", sessions)
             sessions.forEach((record, i) => {
-                console.log(record);
                 record.callbackUrl = url
                     .format({
                         protocol: req.protocol,
@@ -68,7 +69,12 @@ app.get("/broadcastfb/:appId/:userId", (req, res) => {
             console.log(err);
             return res.status(500).json({ entities: { success: "FALSE" } });
         }
-        res.status(200).json({ entities: { success: "TRUE", user: handout } });
+        if (handout){
+            res.status(200).json({ entities: { success: "TRUE", user: true } });
+        }else{
+            res.status(200).json({ entities: { success: "TRUE", user: false } });
+        }
+        
     });
 });
 
